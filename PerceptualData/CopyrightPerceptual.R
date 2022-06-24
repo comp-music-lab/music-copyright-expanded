@@ -1,4 +1,4 @@
-setwd("/Users/username/PerceptualData")
+setwd("/Users/yyc/D盘/日本留学/慶應義塾大学/Academics/2021 Fall/41248修士研究会/PerceptualData/PerceptualData20220605")
 
 install.packages(c("tidyr", "ggplot2"))
 install.packages("ggpubr")
@@ -68,6 +68,7 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.i
 
 
 
+#########################################################################
 # Violin plot for accuracy by participant
 # Basic violin plot
 accuracy_byParti <- read.csv("accuracy_by_participant.csv", header = TRUE)
@@ -113,14 +114,14 @@ mix <- ggplot(data = subset_nonrandom, mapping = aes(x = Condition, y = Accuracy
   scale_shape_manual(name = "", values = c("mean" = 23), 
                      labels = c("mean" = "Mean value with \n95% confidence \ninterval")) + 
   theme(axis.title = element_text(size = 15), 
-        axis.text.x = element_text(angle = 35, size = 15, hjust = 1), 
+        axis.text.x = element_text(angle = 25, size = 15, hjust = 0.8), 
         axis.text.y = element_text(size = 15), 
         legend.title = element_text(size = 13), 
         legend.text = element_text(size = 13)) + 
   guides(color = guide_legend(order = 1), 
          fill = guide_legend(order = 2, reverse = TRUE), 
          shape = guide_legend(order = 3)) + 
-  labs(x = "Condition", y = "Accuracy by Participant")
+  labs(x = "Condition", y = "Matching Degree by Participant")
 
 
 
@@ -204,10 +205,106 @@ p_byCase <- ggplot(data = subset_removeIrrelevantCases, mapping = aes(x = Condit
          fill = guide_legend(order = 2, override.aes = list(shape = NA)), 
          shape = guide_legend(order = 3), 
          size = guide_legend(order = 4)) + 
-  labs(x = "Condition", y = "Accuracy by Case")
+  labs(x = "Condition", y = "Matching Degree by Case")
 
 
 
+#########################################################################
+# Violin plot for accuracy by participant (Vocals-only & Accompaniment-only)
+# Basic violin plot
+accuracy_byParti <- read.csv("accuracy_by_participant_voao.csv", header = TRUE)
+data_mix <- gather(accuracy_byParti, key = "Condition", value = "Accuracy", vocals:accompaniment, factor_key = TRUE)
+data_mix$Condition <- relevel(relevel(data_mix$Condition,"accompaniment"),"vocals")
+summarySE_nonrandom <- summarySE(data_mix, measurevar = "Accuracy", groupvars = "Condition")
+
+mix <- ggplot(data = data_mix, mapping = aes(x = Condition, y = Accuracy)) + 
+  scale_y_continuous(breaks = seq(0,100,by=10), limits = c(0,100)) + 
+  aes(ymin = 0) + aes(ymax = 100) + 
+  geom_point(color = "white", size = 0.1) + 
+  geom_violin(data = data_mix, 
+              mapping = aes(x = Condition, y = Accuracy, color = Condition), 
+              fill = "white") + 
+  geom_dotplot(data = data_mix, 
+               mapping = aes(x = Condition, y = Accuracy, color = Condition, fill = factor(MusicExperience)), 
+               position = position_dodge(width=1.1), binwidth = 3, binaxis = "y", stackdir = "center", dotsize = 0.9) + 
+  geom_errorbar(data = summarySE_nonrandom, 
+                mapping = aes(x = Condition, ymin = Accuracy-ci, ymax = Accuracy+ci), 
+                color = "purple", width = 0.5, size = 1) + 
+  stat_summary(fun = "mean", mapping = aes(shape = "mean"), 
+               geom = "point", color = "yellow", fill = "purple", alpha = 0.8, size = 4) + 
+  scale_x_discrete(labels = c("vocals" = "Vocals-only", 
+                              "accompaniment" = "Accompaniment-only")) + 
+  scale_color_discrete(name = "Condition", labels = c("vocals" = "Vocals-only", 
+                                                      "accompaniment" = "Accompaniment\n-only")) + 
+  scale_fill_manual(name = "Music Experience", 
+                    values = c("0" = "green", "1" = "blue"), 
+                    labels = c("0" = "Non-musician", "1" = "Musician")) + 
+  scale_shape_manual(name = "", values = c("mean" = 23), 
+                     labels = c("mean" = "Mean value with \n95% confidence \ninterval")) + 
+  theme(axis.title = element_text(size = 15), 
+        axis.text.x = element_text(angle = 15, size = 15, hjust = 1), 
+        axis.text.y = element_text(size = 15), 
+        legend.title = element_text(size = 13), 
+        legend.text = element_text(size = 13)) + 
+  guides(color = guide_legend(order = 1), 
+         fill = guide_legend(order = 2, reverse = TRUE), 
+         shape = guide_legend(order = 3)) + 
+  labs(x = "Condition", y = "Matching Degree by Participant")
+
+
+
+# Violin plot for accuracy by case (Vocals-only & Accompaniment-only)
+# Basic violin plot
+accuracy_byCase <- read.csv("accuracy_by_case_voao.csv", header = TRUE)
+data_long <- gather(accuracy_byCase, key = "Condition", value = "Accuracy", vocals:accompaniment, factor_key = TRUE)
+subset_removeIrrelevantCases <- na.omit(data_long)
+subset_normal <- subset(subset_removeIrrelevantCases, Case!=8 & Case!=14 & Case!=29)
+subset_vocalsVsAccompaniment <- subset(subset_removeIrrelevantCases, Case==8 | Case==14 | Case==29)
+summarySE_byCase <- summarySE(subset_removeIrrelevantCases, measurevar = "Accuracy", groupvars = "Condition")
+
+p_byCase <- ggplot(data = subset_removeIrrelevantCases, mapping = aes(x = Condition, y = Accuracy, color = Condition)) + 
+  scale_y_continuous(breaks = seq(0,100,by=10), limits = c(0,100)) + 
+  aes(ymin = 0) + aes(ymax = 100) + 
+  geom_violin(fill = "white", bw = 12) + 
+  geom_dotplot(data = subset_normal, 
+               mapping = aes(x = Condition, y = Accuracy, color = Condition, fill = factor(CourtDecision)), 
+               position = position_dodge(width=0.3), binwidth = 3, binaxis = "y", stackdir = "center", dotsize = 1) + 
+  #  geom_dotplot(binwidth = 3, binaxis = "y", binpositions = "all", stackdir = "center", dotsize = 1, stackgroups = TRUE)
+  geom_point(data = subset_vocalsVsAccompaniment, 
+             mapping = aes(x = Condition, y = Accuracy, 
+                           fill = factor(CourtDecision), group = factor(CourtDecision), 
+                           shape = "triangle"), #Vocals vs Accompaniment cases shown by triangles
+             #position = position_jitterdodge(jitter.width = 0.5, dodge.width = 0.3, seed = 2), 
+             position = position_dodge(width=0.8), 
+             color = "black", alpha = 0.5, size = 4, stroke = 1.5) + 
+  geom_errorbar(data = summarySE_byCase, 
+                mapping = aes(x = Condition, ymin = Accuracy-ci, ymax = Accuracy+ci), 
+                color = "purple", width = 0.5, size = 1) + 
+  stat_summary(fun = "mean", mapping = aes(size = "mean"), 
+               geom = "point", color = "yellow", fill = "purple", 
+               shape = 23, alpha = 0.8) + #Mean values shown by diamond dots
+  scale_x_discrete(labels = c("vocals" = "Vocals-only", 
+                              "accompaniment" = "Accompaniment-only")) + 
+  scale_color_discrete(name = "Condition", labels = c("vocals" = "Vocals-only", 
+                                                      "accompaniment" = "Accompaniment\n-only")) + 
+  scale_fill_manual(name = "Court Decision", 
+                    values = c("0" = "green", "1" = "red"), 
+                    labels = c("0" = "No infringement", "1" = "Infringement")) + 
+  scale_shape_manual(name = "Special Case", values = c("triangle" = 24), 
+                     labels = c("triangle" = "Cases with 1\n instrumental\n work in each\n (i.e. vocals vs.\n accompaniment\n comparisons)")) + 
+  scale_size_manual(name = "", values = c("mean" = 5), 
+                    labels = c("mean" = "Mean value with \n95% confidence \ninterval")) + 
+  theme(axis.title = element_text(size = 15), axis.text = element_text(size = 15), 
+        legend.title = element_text(size = 13), legend.text = element_text(size = 13)) + 
+  guides(color = guide_legend(order = 1), 
+         fill = guide_legend(order = 2, override.aes = list(shape = NA)), 
+         shape = guide_legend(order = 3), 
+         size = guide_legend(order = 4)) + 
+  labs(x = "Condition", y = "Matching Degree by Case")
+
+
+
+#########################################################################
 # Perceptual similarity vs PMI
 similarity <- read.csv("perceptual_simi_vs_pmi_long.csv", header = TRUE)
 similarity$GROUP <- relevel(relevel(relevel(factor(similarity$GROUP),"LYRICS_SIMI"),"MELODY_SIMI"),"FULL_SIMI")
@@ -228,7 +325,7 @@ pmi_p <- ggplot(data = similarity, mapping = aes(x = SIMILARITY, y = PMI)) +
         strip.text.y = element_text(size = 13)) + 
   labs(x = "Mean Perceptual Similarity", y = "Automatically Calculated Melodic Similarity (PMI)") + 
   #  stat_regline_equation(label.x = 4, label.y = 15) + 
-  stat_cor(label.x = 3.5, label.y = 3, size = 5)
+  stat_cor(label.x = 3, label.y = 5, size = 5)
 
 
 
@@ -252,4 +349,4 @@ musly_p <- ggplot(data = perceptual_musly, mapping = aes(x = SIMILARITY, y = Mus
         strip.text.y = element_text(size = 13)) + 
   labs(x = "Mean Perceptual Similarity", y = "Automatically Calculated Audio Similarity (Musly)") + 
   #  stat_regline_equation(label.x = 0, label.y = 98) + 
-  stat_cor(label.x = 3.5, label.y = 90, size = 5)
+  stat_cor(label.x = 3.2, label.y = 90, size = 5)
