@@ -1,4 +1,4 @@
-setwd("/Users/yyc/D盘/日本留学/慶應義塾大学/Academics/2021 Fall/41248修士研究会/PerceptualData/PerceptualData20220605")
+setwd("/Users/username/PerceptualData")
 
 install.packages(c("tidyr", "ggplot2"))
 install.packages("ggpubr")
