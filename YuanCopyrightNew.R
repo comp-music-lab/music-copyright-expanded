@@ -37,13 +37,13 @@ ggplot(d,aes(x=InfringementLyrics,y=Musly,group=Court.Decision))+
 ggplot(d,aes(x=InfringementAudio,y=PMI,group=Court.Decision))+
   geom_point(aes(color=Court.Decision))+
   geom_vline(xintercept = .43)+
-  geom_hline(yintercept = 46)
+  geom_hline(yintercept = 44)
 
 #perceptual full audio vs. automated PMI (best human/automated AUCs) - using perceived similarity
 ggplot(d,aes(x=AudioSimilarity,y=PMI,group=Court.Decision))+
   geom_point(aes(color=Court.Decision))+
   geom_vline(xintercept = 2.60,linetype='dotted')+
-  geom_hline(yintercept = 46,linetype='dotted')
+  geom_hline(yintercept = 44,linetype='dotted')
 
 
 #signal detection analyses:
